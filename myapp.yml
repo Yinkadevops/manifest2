@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springbootdeployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: springapp
+  template:
+    metadata:
+      name: springapppod
+      labels:
+        app: springapp
+    spec:
+      containers:
+      - image: yinkadevops/maven-web-app
+        name: mavenwebapp
+        ports:
+        - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: springboot  
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: springapp
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: javawebappdeployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      name: javapppod
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - image: mylandmarktech/java-web-app
+        name: myjavaapp
+        ports:
+        - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: myapp
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx1-nginx-ingress-6fc7d4995c-psrlv
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: a6962aa77712c4ead8460b126fe8522c-805353527.us-east-1.elb.amazonaws.com
+    http:
+      paths:
+      - path: /maven-web-app # Default Path(/)
+        pathType: Prefix
+        backend:
+          service:
+            name: springboot
+            port:
+             number: 80
+      - path: /java-web-app
+        pathType: Prefix
+        backend:
+          service:
+            name: myapp
+            port:
+             number: 80
+        
